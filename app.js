@@ -6,7 +6,40 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
-var app = express();
+// database connection
+const app = express();
+var pg = require('pg');
+var format = require('pg-format');
+var PGUSER = 'carlyjenkinson';
+var PGDATABASE = 'makersbnb';
+
+var config = {
+  user: PGUSER, // name of the user account
+  database: PGDATABASE, // name of the database
+  max: 100, // max number of clients in the pool
+  idleTimeoutMillis: 30000 // how long a client is allowed to remain idle before being closed
+}
+
+var pool = new pg.Pool(config)
+var myClient
+// database test
+
+var username = "calum.d";
+
+pool.connect(function (err, client, done) {
+  if (err) console.log(err)
+  app.listen(3000, function () {
+    console.log('Connected successfully and listening on port 3000')
+  })
+  myClient = client
+  var nameQuery = format('SELECT * from users WHERE username = %L', username);
+  myClient.query(nameQuery, function (err, result) {
+    if (err) {
+      console.log(err)
+    }
+    console.log(result.rows[0])
+  })
+})
 
 // configure app
 
@@ -19,7 +52,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname + '/public'));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -32,38 +65,32 @@ app.get('/', function (req, res) {
   });
 });
 
-app.get('/SignUp', function (req, res) {
-  res.render('SignUp', {
+app.get('/signup', function (req, res) {
 
-  });
-})
-
-app.get('/LogIn', function (req, res) {
-  res.render('LogIn', {
-
-  });
-})
-
-// app.post('/', function (req, res) {
-//   // if (SignUp) {
-//   //   console.log("Please sign up");
-//   //   return res.redirect('/SignUp');
-//   // }
-//   // else if (LogIn) {
-//   //   console.log("Please sign in");
-//   //   return res.redirect('/LogIn');
-//   // }
-// });
-
-//   app.post('/LogIn', function (req, res) {
-//     var newItem = req.body.newItem;
-
-//   res.redirect('/LogIn');
-// });
-
-
-app.listen(3000, function () {
-  console.log('ready on port 3000');
+  res.render('signup');
 });
+
+app.post('/signup', function (req, res) {
+  var user_id = req.param('username');
+  var email = req.param('email');
+  var password = req.param('password');
+  console.log(res.send(user_id + email + password));
+})
+
+
+app.get('/login', function (req, res) {
+  res.render('login');
+});
+
+app.get('/confirmation', function (req, res) {
+  res.render('confirmation');
+});
+
+app.get('/spaces', function (req, res) {
+  res.render('spaces');
+});
+
+
+
 
 module.exports = app;
